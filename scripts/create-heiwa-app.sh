@@ -15,7 +15,8 @@ if [[ -z "${APP_SOURCE}" ]]; then
 fi
 
 rm -rf "${DEST_APP}"
-cp -R "${APP_SOURCE}" "${DEST_APP}"
+# Use `ditto` for macOS app bundles to preserve executable layout and metadata.
+ditto "${APP_SOURCE}" "${DEST_APP}"
 
 echo "Installed: ${DEST_APP}"
 

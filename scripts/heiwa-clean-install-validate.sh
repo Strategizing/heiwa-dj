@@ -3,6 +3,7 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 APP_BUNDLE="${HOME}/Applications/Heiwa DJ.app"
+DESKTOP_RUNTIME_DIR="${ROOT_DIR}/packages/desktop/runtime"
 TIMEOUT_SECONDS="${HEIWA_VALIDATION_TIMEOUT_SECONDS:-90}"
 
 STATE_PATHS=(
@@ -48,6 +49,11 @@ for path in "${STATE_PATHS[@]}"; do
     echo "Removed: ${path}"
   fi
 done
+
+if [[ -d "${DESKTOP_RUNTIME_DIR}" ]]; then
+  rm -rf "${DESKTOP_RUNTIME_DIR}"
+  echo "Removed runtime cache: ${DESKTOP_RUNTIME_DIR}"
+fi
 
 echo "[3/5] Building and reinstalling Heiwa DJ.app..."
 pnpm --dir "${ROOT_DIR}" heiwa:app:build
