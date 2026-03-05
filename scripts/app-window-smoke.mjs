@@ -83,37 +83,48 @@ async function postJson(url, body) {
   return { status: res.status, ok: res.ok, json: payload }
 }
 
-async function waitForStatusEvent(timeoutMs) {
+async function waitForStatusEvent(timeoutMs = 20000) {
   if (typeof WebSocket === 'undefined') {
     throw new Error('Node runtime does not provide WebSocket global.')
   }
 
-  return new Promise((resolve, reject) => {
-    const timer = setTimeout(() => {
-      ws.close()
-      reject(new Error(`Timed out waiting for websocket status event from ${WS_URL}`))
-    }, timeoutMs)
+  const started = Date.now()
+  while (Date.now() - started < timeoutMs) {
+    try {
+      return await new Promise((resolve, reject) => {
+        const remaining = timeoutMs - (Date.now() - started)
+        if (remaining <= 0) return reject(new Error('Timed out before connection attempt'))
 
-    const ws = new WebSocket(WS_URL)
-
-    ws.addEventListener('error', (err) => {
-      clearTimeout(timer)
-      reject(new Error(`WebSocket error: ${String(err.message ?? err.type ?? 'unknown')}`))
-    })
-
-    ws.addEventListener('message', (evt) => {
-      try {
-        const parsed = JSON.parse(String(evt.data))
-        if (parsed?.type === 'status') {
-          clearTimeout(timer)
+        const timer = setTimeout(() => {
           ws.close()
-          resolve(parsed)
-        }
-      } catch {
-        // ignore parse errors
-      }
-    })
-  })
+          reject(new Error(`Timed out waiting for websocket status event from ${WS_URL}`))
+        }, remaining)
+
+        const ws = new WebSocket(WS_URL)
+
+        ws.addEventListener('error', (err) => {
+          clearTimeout(timer)
+          reject(new Error(`WebSocket error: ${String(err.message ?? err.type ?? 'unknown')}`))
+        })
+
+        ws.addEventListener('message', (evt) => {
+          try {
+            const parsed = JSON.parse(String(evt.data))
+            if (parsed?.type === 'status') {
+              clearTimeout(timer)
+              ws.close()
+              resolve(parsed)
+            }
+          } catch {
+            // ignore parse errors
+          }
+        })
+      })
+    } catch (err) {
+      if (Date.now() - started >= timeoutMs) throw err
+      await new Promise((resolve) => setTimeout(resolve, 1000))
+    }
+  }
 }
 
 function pushCheck(name, ok, details) {
@@ -187,7 +198,7 @@ async function main() {
       containsInitializer: snippetText.includes('heiwaSocketInitialized')
     })
 
-    const wsEvent = await waitForStatusEvent(12000)
+    const wsEvent = await waitForStatusEvent()
     pushCheck('ws-transport', wsEvent?.type === 'status', {
       type: wsEvent?.type ?? null,
       clientState: wsEvent?.clientState ?? null

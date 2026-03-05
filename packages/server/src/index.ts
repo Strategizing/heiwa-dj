@@ -170,9 +170,10 @@ async function main(): Promise<void> {
     
     // Sync local state when SpacetimeDB set updates (for live persona/vibe shifts)
     st.onDjSetUpdate((newSet) => {
-      if (newSet.current_persona !== state.currentPersona) {
-        console.log(`[Heiwa] Persona shift in Hub: ${newSet.current_persona}`)
-        state.currentPersona = newSet.current_persona
+      const nextPersona = newSet.current_persona ?? newSet.currentPersona
+      if (nextPersona && nextPersona !== state.currentPersona) {
+        console.log(`[Heiwa] Persona shift in Hub: ${nextPersona}`)
+        state.currentPersona = nextPersona
         api.broadcast()
       }
     })

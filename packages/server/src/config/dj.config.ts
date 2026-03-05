@@ -23,11 +23,12 @@ export const djConfig: DJConfig = {
   sampleDir: 'samples',
   sampleMapPath: 'samples/strudel.json',
   modelCandidates: [
-    'qwen2.5-coder:14b-instruct-q4_K_M',
-    'qwen2.5-coder:7b-instruct-q4_K_M',
+    'heiwa-dj-engine',
+    'deepseek-coder-v2:16b',
+    'qwen2.5-coder:14b',
     'qwen2.5-coder:7b'
   ],
-  excludedToolModels: ['deepseek-coder-v2:16b']
+  excludedToolModels: []
 }
 
 export function loadConfig(): DJConfig {

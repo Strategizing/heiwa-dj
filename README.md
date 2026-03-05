@@ -1,10 +1,11 @@
 # Heiwa DJ
 
-Heiwa DJ is a local macOS AI DJ application with:
+Heiwa DJ is a standalone open-source macOS AI DJ application with:
 - autonomous Strudel code generation
 - embedded Strudel playback engine
 - live chat + transport controls
 - local Ollama model execution (`qwen2.5-coder:7b`)
+- no cloud synthesis or external browser-based performance loop in the packaged app
 
 ## Repository
 
@@ -53,6 +54,11 @@ From the wizard you can:
 Launching starts:
 - Heiwa API/UI at `http://localhost:3001`
 - embedded engine at `http://localhost:4321/engine`
+
+The packaged desktop app keeps the performance loop inside Electron:
+- the hidden engine window is the only Strudel playback client
+- the UI mirrors engine state without spawning a second engine instance
+- vibe requests become Strudel locally through Ollama, lint, and the in-app bridge
 
 ## Terminal Launcher (Optional)
 

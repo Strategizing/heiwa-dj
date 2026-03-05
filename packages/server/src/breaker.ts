@@ -13,7 +13,24 @@ const OPEN_AT: Record<BreakerBucket, number> = {
   model_timeout: 2
 }
 
-export const FALLBACK_GROOVE = 'setcpm(124); stack(s("bd*4"), s("~ cp ~ cp"), s("hh*8").gain(0.45))'
+export const FALLBACK_GROOVE = [
+  'setcpm(140)',
+  '$: stack(',
+  '  s("bd(5,8)").slow(2).gain(0.95),',
+  '  s("sd ~ sd ~").slow(2).gain(0.72),',
+  '  note("<0 -2 -3 -5>").slow(2)',
+  '    .s("sawtooth")',
+  '    .fm(sine.range(18, 64).fast(4))',
+  '    .fmh(sine.range(0.2, 1.8).fast(8))',
+  '    .lpf(sine.range(120, 900).fast(4))',
+  '    .lpq(sine.range(15, 30).fast(6))',
+  '    .shape(0.72)',
+  '    .distort(0.38)',
+  '    .crush(6)',
+  '    .gain(0.7),',
+  '  s("hh*16").gain(0.2)',
+  ')'
+].join('\n')
 
 export class CircuitBreaker {
   private buckets: Record<BreakerBucket, Bucket> = {

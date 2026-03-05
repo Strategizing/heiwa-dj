@@ -66,9 +66,9 @@ function vibeColor(vibe: string): string {
 }
 
 function connectionBannerTone(state: 'none' | 'connecting' | 'connected'): { bg: string; border: string; label: string } {
-  if (state === 'connected') return { bg: '#123824', border: '#2a9d8f', label: '🟢 Strudel connected' }
-  if (state === 'connecting') return { bg: '#3b2d0d', border: '#f4a261', label: '🟡 Client connecting...' }
-  return { bg: '#3b1116', border: '#e76f51', label: '🔴 No Strudel client' }
+  if (state === 'connected') return { bg: '#123824', border: '#2a9d8f', label: 'Embedded engine connected' }
+  if (state === 'connecting') return { bg: '#3b2d0d', border: '#f4a261', label: 'Embedded engine connecting' }
+  return { bg: '#3b1116', border: '#e76f51', label: 'Embedded engine offline' }
 }
 
 export default function Controls({
@@ -197,14 +197,16 @@ export default function Controls({
                 onClick={onOpenStrudel}
                 style={{ border: 0, borderRadius: 8, padding: '10px 16px', cursor: 'pointer', background: '#3a86ff', color: '#fff', fontWeight: 600, fontSize: 13 }}
               >
-                OPEN ENGINE
+                SHOW ENGINE PANEL
               </button>
-              <button
-                onClick={() => void onCopySnippet()}
-                style={{ border: 0, borderRadius: 8, padding: '10px 16px', cursor: 'pointer', background: 'rgba(255,255,255,0.1)', color: '#fff', fontWeight: 600, fontSize: 13 }}
-              >
-                COPY SNIPPET
-              </button>
+              {!status.localMode ? (
+                <button
+                  onClick={() => void onCopySnippet()}
+                  style={{ border: 0, borderRadius: 8, padding: '10px 16px', cursor: 'pointer', background: 'rgba(255,255,255,0.1)', color: '#fff', fontWeight: 600, fontSize: 13 }}
+                >
+                  COPY SNIPPET
+                </button>
+              ) : null}
               <button
                 onClick={() => setBannerDismissed(true)}
                 style={{ border: 0, borderRadius: 8, padding: '10px 16px', cursor: 'pointer', background: 'transparent', color: 'rgba(255,255,255,0.4)', fontWeight: 600, fontSize: 12 }}

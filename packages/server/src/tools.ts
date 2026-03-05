@@ -46,7 +46,7 @@ async function sendPattern(ctx: ToolsContext, input: {
   const state = ctx.state
 
   if (!ctx.bridge.isClientConnected()) {
-    const message = 'No Strudel client connected. Open strudel.cc or run pnpm dev:local'
+    const message = 'Embedded Strudel engine is not connected yet. Wait for the in-app engine to finish booting.'
     state.lastError = message
     pushChat(state, { role: 'system', text: message })
     emitUI(ctx, { type: 'error', message, source: 'strudel', ts: Date.now() })
@@ -134,13 +134,13 @@ export function createDjTools(ctx: ToolsContext) {
 
   return {
     play_pattern: tool({
-      description: 'Inject a Strudel pattern into the next phrase boundary. Always use setcpm().',
+      description: 'Inject a Strudel pattern into the next phrase boundary for Heiwa DJ’s embedded local engine. Always use setcpm() and prefer bass movement, FM, filtering, and halftime phrasing when the vibe calls for power.',
       inputSchema: playPatternSchema,
       execute: async (input) => sendPattern(ctx, input)
     }),
 
     transition: tool({
-      description: 'Create a smooth xfade transition between outgoing and incoming patterns.',
+      description: 'Create a smooth xfade transition between outgoing and incoming patterns without breaking the local embedded groove.',
       inputSchema: z.object({
         outgoing: z.string().min(1),
         incoming: z.string().min(1),

@@ -238,6 +238,11 @@ export function startAPI(opts: APIOptions): APIRuntime {
     const request = makeRequest({ text, priority, source })
     enqueueRequest(opts.state, request, opts.queueMax)
     pushChat(opts.state, { role: 'user', text })
+    try {
+      DJSpacetimeClient.getInstance().submitRequest(text, priority)
+    } catch {
+      // ignore
+    }
 
     res.json({ ok: true, request })
   })
@@ -254,6 +259,11 @@ export function startAPI(opts: APIOptions): APIRuntime {
       opts.state.playbackActive = true
       opts.state.lastError = null
       pushChat(opts.state, { role: 'system', text: 'Playback started.' })
+      try {
+        DJSpacetimeClient.getInstance().setPlayback(true)
+      } catch {
+        // ignore
+      }
       res.json({ ok: true })
       return
     }
@@ -273,6 +283,11 @@ export function startAPI(opts: APIOptions): APIRuntime {
       }
       opts.state.lastError = null
       pushChat(opts.state, { role: 'system', text: 'Playback stopped.' })
+      try {
+        DJSpacetimeClient.getInstance().setPlayback(false)
+      } catch {
+        // ignore
+      }
       res.json({ ok: true })
       return
     }
@@ -291,6 +306,11 @@ export function startAPI(opts: APIOptions): APIRuntime {
     }
     opts.state.lastError = null
     pushChat(opts.state, { role: 'system', text: 'Hush command sent.' })
+    try {
+      DJSpacetimeClient.getInstance().setPlayback(false)
+    } catch {
+      // ignore
+    }
     res.json({ ok: true })
   })
 

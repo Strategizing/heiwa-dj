@@ -305,7 +305,7 @@ export class DJBridge extends EventEmitter {
 
   private async dispatchCommand(cmd: BridgeCommand): Promise<BridgeCommandResult> {
     if (this.browserClients.size === 0) {
-      throw new Error('No Strudel client connected. Open strudel.cc or run pnpm dev:local')
+      throw new Error('No embedded Strudel engine client connected yet')
     }
 
     const payload = {
@@ -423,7 +423,6 @@ export class DJBridge extends EventEmitter {
       .card { border: 1px solid #2d3f56; border-radius: 12px; padding: 14px; background: #111a24; }
       .row { display: flex; gap: 8px; flex-wrap: wrap; }
       button { border: 0; border-radius: 8px; padding: 10px 14px; cursor: pointer; font-weight: 700; }
-      #openStrudel { background: #3a86ff; color: #fff; }
       #copySnippet { background: #2a9d8f; color: #06241f; }
       #status { color: #a5b8ce; font-weight: 600; }
       pre { margin: 0; white-space: pre-wrap; word-break: break-word; background: #0a1118; border: 1px solid #243548; border-radius: 10px; padding: 12px; min-height: 180px; }
@@ -431,19 +430,17 @@ export class DJBridge extends EventEmitter {
   </head>
   <body>
     <div class="wrap">
-      <h1>Heiwa DJ Local Connection Helper</h1>
+      <h1>Heiwa DJ Embedded Engine Helper</h1>
       <div class="card">
-        <p><strong>Native engine mode is available.</strong> You can run Strudel fully local in this app.</p>
+        <p><strong>Heiwa DJ runs Strudel locally inside the app.</strong> Use the embedded engine route below for diagnostics or manual inspection.</p>
         <div class="row">
           <a href="/engine">Open local engine</a>
         </div>
       </div>
       <div class="card">
-        <p>1. Open <strong>strudel.cc</strong></p>
-        <p>2. Paste the snippet below into the browser console once</p>
-        <p>3. Keep strudel.cc open while Heiwa DJ performs</p>
+        <p>The embedded engine route is the preferred standalone runtime.</p>
+        <p>The snippet below remains available only for advanced browser debugging during development.</p>
         <div class="row">
-          <button id="openStrudel">Open strudel.cc</button>
           <button id="copySnippet">Copy snippet</button>
         </div>
       </div>
@@ -458,12 +455,7 @@ export class DJBridge extends EventEmitter {
       const apiBase = 'http://localhost:${this.opts.apiPort}'
       const status = document.getElementById('status')
       const snippet = document.getElementById('snippet')
-      const openButton = document.getElementById('openStrudel')
       const copyButton = document.getElementById('copySnippet')
-
-      function openStrudel() {
-        window.open('https://strudel.cc', '_blank')
-      }
 
       async function loadSnippet() {
         try {
@@ -485,7 +477,7 @@ export class DJBridge extends EventEmitter {
             : await loadSnippet()
           if (text) {
             await navigator.clipboard.writeText(text)
-            status.textContent = 'Snippet copied. Paste into strudel.cc console.'
+            status.textContent = 'Snippet copied for development use.'
           }
         } catch (err) {
           status.textContent = 'Copy failed: ' + String(err)
@@ -498,22 +490,20 @@ export class DJBridge extends EventEmitter {
           if (!res.ok) throw new Error('status request failed')
           const data = await res.json()
           if (data.clientState === 'connected') {
-            status.textContent = '🟢 Strudel connected'
+            status.textContent = 'Embedded engine connected'
           } else if (data.clientState === 'connecting') {
-            status.textContent = '🟡 Client connecting...'
+            status.textContent = 'Embedded engine connecting...'
           } else {
-            status.textContent = '🔴 No Strudel client. Open strudel.cc and paste snippet.'
+            status.textContent = 'Embedded engine is not connected yet.'
           }
         } catch (err) {
           status.textContent = 'Status unavailable: ' + String(err)
         }
       }
 
-      openButton.addEventListener('click', openStrudel)
       copyButton.addEventListener('click', () => { void copySnippet() })
 
       window.addEventListener('load', () => {
-        openStrudel()
         void loadSnippet()
         void pollStatus()
         setInterval(() => { void pollStatus() }, 2000)

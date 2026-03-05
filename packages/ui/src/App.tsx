@@ -218,7 +218,7 @@ export default function App() {
 
   const isMobile = viewportWidth < 980
 
-  const connectionMode = useMemo(() => (status.localMode ? 'localhost' : 'strudel.cc'), [status.localMode])
+  const connectionMode = useMemo(() => (status.localMode ? 'embedded engine' : 'external bridge'), [status.localMode])
 
   async function onSend(text: string): Promise<void> {
     setMessages((prev) => [...prev, makeMessage({ type: 'user', ts: Date.now(), text })])
@@ -244,7 +244,7 @@ export default function App() {
   }
 
   function onOpenStrudel(): void {
-    window.open('https://strudel.cc', '_blank', 'noopener,noreferrer')
+    document.getElementById('engine-panel')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
   }
 
   async function onCopySnippet(): Promise<void> {
@@ -285,7 +285,7 @@ export default function App() {
               🎧 HEIWA DJ
             </h1>
             <div style={{ color: '#94abc7', fontSize: 14, fontWeight: 500, marginTop: 4 }}>
-              Autonomous AI Performer • v1.6.7
+              Standalone Local AI DJ • v1.7.0
             </div>
           </div>
           <div style={{
@@ -351,7 +351,9 @@ export default function App() {
             />
           </div>
 
-          <div style={{
+          <div
+            id="engine-panel"
+            style={{
             minHeight: 0,
             display: 'flex',
             flexDirection: 'column',
@@ -362,12 +364,64 @@ export default function App() {
             backdropFilter: 'blur(20px)',
             boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)'
           }}>
-            <iframe 
-              src={`http://${window.location.hostname}:4321/engine`} 
-              style={{ width: '100%', height: '100%', border: 'none' }}
-              title="Strudel Engine"
-              allow="autoplay; microphone; midi"
-            />
+            <div style={{ display: 'grid', gap: 18, padding: 24, height: '100%', boxSizing: 'border-box' }}>
+              <div>
+                <div style={{ fontSize: 10, fontWeight: 700, color: '#667c94', letterSpacing: '0.08em', marginBottom: 8 }}>EMBEDDED ENGINE</div>
+                <div style={{ fontSize: 28, fontWeight: 800, letterSpacing: '-0.02em', color: '#f0f6ff' }}>
+                  Local Strudel Runtime
+                </div>
+                <div style={{ marginTop: 8, color: '#8fa7c4', fontSize: 14, lineHeight: 1.6 }}>
+                  Heiwa DJ renders and performs inside the app. The hidden Electron audio window is the only engine client; this panel mirrors its state without spawning a second runtime.
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 12 }}>
+                {[
+                  ['Connection', status.clientState],
+                  ['Phrase', String(status.phraseIndex)],
+                  ['Phrase MS', String(Math.round(status.phraseMs))],
+                  ['Tempo', `${status.cpm} CPM`],
+                  ['Persona', status.currentPersona],
+                  ['Playback', status.playbackActive ? 'active' : 'stopped']
+                ].map(([label, value]) => (
+                  <div key={label} style={{ borderRadius: 14, padding: 14, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                    <div style={{ fontSize: 10, fontWeight: 700, color: '#667c94', letterSpacing: '0.06em', marginBottom: 6 }}>{label.toUpperCase()}</div>
+                    <div style={{ fontSize: 18, fontWeight: 700, color: '#e7edf5' }}>{value}</div>
+                  </div>
+                ))}
+              </div>
+
+              <div style={{ borderRadius: 16, padding: 18, background: 'linear-gradient(135deg, rgba(92,198,255,0.12), rgba(255,255,255,0.02))', border: '1px solid rgba(92,198,255,0.18)' }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: '#5cc6ff', letterSpacing: '0.08em', marginBottom: 10 }}>LOCAL RENDER CONTRACT</div>
+                <div style={{ color: '#d8e6f7', fontSize: 13, lineHeight: 1.7 }}>
+                  Vibes become Strudel patterns on-device through Ollama, pass the AST/lint gate, then schedule phrase-accurate updates over the internal bridge. No browser tab, cloud synth, or external code runner is required.
+                </div>
+              </div>
+
+              <pre style={{
+                margin: 0,
+                flex: 1,
+                minHeight: 180,
+                borderRadius: 16,
+                padding: 18,
+                background: 'rgba(0, 0, 0, 0.32)',
+                border: '1px solid rgba(255,255,255,0.06)',
+                overflow: 'auto',
+                color: '#91b4d8',
+                fontSize: 12,
+                lineHeight: 1.65,
+                fontFamily: '"Fira Code", "JetBrains Mono", ui-monospace, monospace'
+              }}>
+{JSON.stringify({
+  engineRoute: `http://${window.location.hostname}:4321/engine`,
+  embeddedClientState: status.clientState,
+  bridgeConnections: status.bridgeConnections,
+  playbackActive: status.playbackActive,
+  nowPlayingVibe: status.vibe,
+  activeModel: status.activeModel
+}, null, 2)}
+              </pre>
+            </div>
           </div>
         </div>
       </div>

@@ -16,7 +16,7 @@ interface AgentOptions {
   uiEmitter: { emit: (event: 'ui', payload: UIEvent) => boolean }
 }
 
-  function buildSystemPrompt(state: DJState): string {
+function buildSystemPrompt(state: DJState): string {
   const pendingRequest = state.requestQueue[0]?.text ?? 'none'
   const recentVibes = state.patternHistory.slice(-5).map((p) => p.vibe).join(' -> ') || 'none'
   const currentVibe = state.currentVibe
@@ -30,15 +30,32 @@ interface AgentOptions {
   const personaPrompt = st.getPersonaPrompt(state.currentPersona) || ''
 
   return `You are Heiwa — master AI DJ. Persona: ${state.currentPersona}. ${personaPrompt}
-Compose in real-time with Strudel.
+Compose in real-time with Strudel for a standalone local-first app with an embedded engine.
 CORE COMMANDS:
 - TEMPO: Use setcpm(N) ONLY.
 - SAMPLES: Use ONLY: ${ALLOWED_SAMPLE_NAMES}.
-- MIXING: Mutate elements subtly. Maintain groove. 8-bar build -> drop -> 4-bar recovery.
+- STRUCTURE: Build heavy halftime grooves with mechanical tension. Default to .slow(2), syncopation, and phrase-aware evolution.
+- SONIC THESIS: For bass voices, prefer wet/chomping movement from .lpf(...) with extreme .lpq(15, 30) driven by fast modulators such as sine.range(100, 1000).fast(4).
+- TIMBRE: Avoid clean sine-only arrangements. Use FM and mangling with .fm(), .fmh(), .shape(), .distort(), and .crush() whenever the request calls for weight, aggression, metallic texture, or a drop.
+- RHYTHM: Use Euclidean or sub-pattern tension for drums and subs, e.g. s("sub(3,8)") or related syncopated phrasing.
+- ARRANGEMENT: Maintain a deterministic arc: 8-bar build -> drop -> 4-bar recovery.
+- APP RULE: Everything runs locally inside Heiwa DJ. Never mention browsers, strudel.cc, or external setup steps.
 - TOOLS: Call read_request() often. Call done() after every play_pattern.
 
-TOOLKIT: .loopAt(4), .chop(16), .slice(8, "0 1 ..."), .speed("<1 -1>"), .jux(rev), .every(4, ...), .sometimesBy(0.4, ...), .room(0.3), .delay(0.2), .cutoff(800).
+TOOLKIT: .loopAt(4), .chop(16), .slice(8, "0 1 ..."), .speed("<1 -1>"), .jux(rev), .every(4, ...), .sometimesBy(0.4, ...), .room(0.3), .delay(0.2), .cutoff(800), .lpf(...), .lpq(...), .fm(...), .fmh(...), .shape(...), .distort(...), .crush(...).
 xfade(outgoing, slow(16, sine), incoming) for vibe shifts.
+
+REFERENCE SHAPE:
+setcpm(140)
+$: note("<0 -2 -3 -5>").slow(2)
+  .s("sawtooth")
+  .fm(sine.range(18, 64).fast(4))
+  .fmh(sine.range(0.2, 1.8).fast(8))
+  .lpf(sine.range(120, 900).fast(4))
+  .lpq(sine.range(15, 30).fast(6))
+  .shape(0.7)
+  .distort(0.35)
+  .crush(6)
 
 STATUS:
 NOW: ${currentVibe} @ ${currentCPM} CPM | key: ${currentKey}
@@ -59,7 +76,7 @@ function buildTick(state: DJState): string {
     `Recent arc: ${recentVibes || 'just started'}.`,
     errorNote,
     `Pending request: ${pending}.`,
-    'Make your next move. Evolve the set.'
+    'Make your next move. Evolve the set with local-first standalone embedded-engine assumptions only.'
   ].filter(Boolean).join(' ')
 }
 
