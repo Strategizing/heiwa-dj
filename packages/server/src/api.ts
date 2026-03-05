@@ -6,7 +6,8 @@ import cors from 'cors'
 import { WebSocketServer, type WebSocket } from 'ws'
 import { CircuitBreaker } from './breaker.js'
 import { DJBridge } from './bridge.js'
-import { enqueueRequest, makeRequest, pushChat, type DJState, type Priority } from './state.js'
+import { enqueueRequest, makeRequest, pushChat, updateTempoDerivedFields, type DJState, type Priority } from './state.js'
+import { processLocalIntelligence } from './intelligence.js'
 
 export type UIEvent =
   | { type: 'pattern'; code: string; vibe: string; cpm: number; ts: number }
@@ -161,25 +162,42 @@ export function startAPI(opts: APIOptions): APIRuntime {
       return
     }
 
+    // Fast-track simple musical commands natively
+    const local = processLocalIntelligence(opts.state, text)
+    if (local.handled) {
+      if (local.message) pushChat(opts.state, { role: 'system', text: local.message })
+
+      if (local.action === 'gain' && local.value !== undefined) {
+        opts.state.volumeMultiplier = local.value
+        await opts.bridge.queueCommand({
+          sessionId: opts.state.sessionId,
+          cmd: 'gain',
+          data: String(local.value),
+          immediate: true,
+          priority: 'P0'
+        })
+      } else if (local.action === 'cpm' && local.value !== undefined) {
+        updateTempoDerivedFields(opts.state, local.value)
+        await opts.bridge.queueCommand({
+          sessionId: opts.state.sessionId,
+          cmd: 'cpm',
+          data: String(local.value),
+          immediate: true,
+          priority: 'P0'
+        })
+      } else if (local.action === 'hush') {
+        await opts.bridge.queueCommand({ sessionId: opts.state.sessionId, cmd: 'stop', immediate: true, priority: 'P0' })
+        opts.state.playbackActive = false
+      }
+
+      opts.state.lastError = null
+      sendStatus()
+      return res.json({ ok: true, local: true, request: makeRequest({ text, priority, source }) })
+    }
+
     const request = makeRequest({ text, priority, source })
     enqueueRequest(opts.state, request, opts.queueMax)
     pushChat(opts.state, { role: 'user', text })
-
-    if (priority === 'P0' && /(hush|stop|silence)/i.test(text)) {
-      const result = await opts.bridge.queueCommand({
-        sessionId: opts.state.sessionId,
-        cmd: 'stop',
-        priority: 'P0',
-        immediate: true
-      })
-      opts.state.playbackActive = false
-      if (!result.success) {
-        opts.state.lastError = result.error ?? 'stop failed'
-        sendEvent({ type: 'error', message: opts.state.lastError, source: 'strudel', ts: Date.now() })
-        return res.json({ ok: false, error: opts.state.lastError, request })
-      }
-      opts.state.lastError = null
-    }
 
     res.json({ ok: true, request })
   })
@@ -245,20 +263,11 @@ export function startAPI(opts: APIOptions): APIRuntime {
 
     opts.state.volumeMultiplier = value
 
-    if (opts.state.currentCode && opts.bridge.isClientConnected()) {
-      const base = opts.state.currentCode.replace(
-        /\nall\(\(x\)=>x\.gain\([^)]+\)\)\s*$/,
-        ''
-      )
-      const updated = value < 0.999
-        ? `${base}\nall((x)=>x.gain(${value.toFixed(3)}))`
-        : base
-      opts.state.currentCode = updated
-
+    if (opts.bridge.isClientConnected()) {
       const result = await opts.bridge.queueCommand({
         sessionId: opts.state.sessionId,
-        cmd: 'update',
-        code: updated,
+        cmd: 'gain',
+        data: String(value),
         priority: 'P0',
         immediate: true
       })
@@ -363,7 +372,7 @@ export function startAPI(opts: APIOptions): APIRuntime {
   opts.bridge.on('connection_state', onConnectionState)
   opts.bridge.on('warning', onWarning)
 
-  server.listen(opts.apiPort)
+  server.listen(opts.apiPort, '127.0.0.1')
 
   return {
     broadcast: sendStatus,

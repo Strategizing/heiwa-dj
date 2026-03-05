@@ -82,6 +82,7 @@ export default function Controls({
   const [bannerDismissed, setBannerDismissed] = useState(false)
   const [justConnected, setJustConnected] = useState(false)
   const prevClientState = useRef(status.clientState)
+  const volumeTimer = useRef<NodeJS.Timeout | null>(null)
 
   useEffect(() => {
     setCpmDraft(String(status.cpm))
@@ -313,7 +314,10 @@ export default function Controls({
             onChange={(e) => {
               const next = Number(e.currentTarget.value)
               setVolume(next)
-              void onVolume(next / 100)
+              if (volumeTimer.current) clearTimeout(volumeTimer.current)
+              volumeTimer.current = setTimeout(() => {
+                void onVolume(next / 100)
+              }, 150)
             }}
             style={{ width: '100%', accentColor: '#3a86ff' }}
           />

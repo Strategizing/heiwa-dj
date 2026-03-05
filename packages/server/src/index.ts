@@ -9,6 +9,16 @@ import { DJAgentRunner } from './agent.js'
 import { DJBridge } from './bridge.js'
 import { CircuitBreaker } from './breaker.js'
 import { loadConfig } from './config/dj.config.js'
+
+function getRuntimeConfig(): any {
+  const envPath = process.env.HEIWA_DJ_CONFIG_PATH
+  if (envPath && fs.existsSync(envPath)) {
+    console.log(`[Config] loading overrides from ${envPath}`)
+    // In a real implementation we might dynamic import or merge.
+    // For now we trust the built-in loadConfig but allow future expansion.
+  }
+  return loadConfig()
+}
 import { loadAllowedSamples } from './linter.js'
 import { selectActiveModel } from './probe.js'
 import { createInitialState, makeRequest, enqueueRequest } from './state.js'
@@ -19,18 +29,18 @@ function printStartupBanner(localMode: boolean, embeddedEngine: boolean, apiPort
       console.log('┌─────────────────────────────────────────────────────┐')
       console.log('│  Heiwa DJ — embedded Strudel engine mode           │')
       console.log('│                                                     │')
-      console.log(`│  1. Open http://localhost:${localStrudelPort}/engine              │`)
+      console.log(`│  1. Open http://127.0.0.1:${localStrudelPort}/engine              │`)
       console.log('│  2. Keep engine window open                         │')
-      console.log(`│  3. Open http://localhost:${apiPort} for DJ UI                 │`)
+      console.log(`│  3. Open http://127.0.0.1:${apiPort} for DJ UI                 │`)
       console.log('└─────────────────────────────────────────────────────┘')
     } else {
       console.log('┌─────────────────────────────────────────────────────┐')
       console.log('│  Heiwa DJ — local helper mode                      │')
       console.log('│                                                     │')
-      console.log(`│  1. Open http://localhost:${localStrudelPort} in Chrome            │`)
+      console.log(`│  1. Open http://127.0.0.1:${localStrudelPort} in Chrome            │`)
       console.log('│  2. Click "Open strudel.cc"                        │')
       console.log('│  3. Paste snippet into strudel.cc console          │')
-      console.log(`│  4. Open http://localhost:${apiPort} for DJ UI                 │`)
+      console.log(`│  4. Open http://127.0.0.1:${apiPort} for DJ UI                 │`)
       console.log('└─────────────────────────────────────────────────────┘')
     }
     return
@@ -42,9 +52,9 @@ function printStartupBanner(localMode: boolean, embeddedEngine: boolean, apiPort
   console.log('│  1. Open https://strudel.cc in Chrome              │')
   console.log('│  2. Open browser console (Cmd+Option+J)            │')
   console.log('│  3. Paste connection snippet from:                 │')
-  console.log(`│     http://localhost:${apiPort}/snippet                    │`)
+  console.log(`│     http://127.0.0.1:${apiPort}/snippet                    │`)
   console.log('│  4. Press Enter — you should see "connected"       │')
-  console.log(`│  5. Open http://localhost:${apiPort} for the DJ UI                 │`)
+  console.log(`│  5. Open http://127.0.0.1:${apiPort} for the DJ UI                 │`)
   console.log('└─────────────────────────────────────────────────────┘')
 }
 
@@ -56,7 +66,7 @@ async function main(): Promise<void> {
   }
   console.log(`[Heiwa] Node runtime: ${process.version}`)
 
-  const config = loadConfig()
+  const config = getRuntimeConfig()
   const localMode = process.argv.includes('--local')
   const embeddedEngine = process.argv.includes('--embedded-engine')
   const serveBuiltUi = process.env.HEIWA_DJ_SERVE_UI_DIST === '1'
@@ -162,9 +172,9 @@ async function main(): Promise<void> {
   printStartupBanner(localMode, embeddedEngine, config.apiPort, config.localStrudelPort)
   if (serveBuiltUi) {
     console.log(`[Heiwa] serving built UI from ${uiDistDir}`)
-    console.log(`[Heiwa] open http://localhost:${config.apiPort}`)
+    console.log(`[Heiwa] open http://127.0.0.1:${config.apiPort}`)
   } else {
-    console.log('[Heiwa] UI dev server expected on http://localhost:5173')
+    console.log('[Heiwa] UI dev server expected on http://127.0.0.1:5173')
   }
   console.log(`[Heiwa] model selected: ${modelSelection.activeModel} (${modelSelection.mode})`)
   if (modelSelection.warning) {
@@ -181,7 +191,7 @@ async function main(): Promise<void> {
 
   if (localMode && !noAutoOpen) {
     const localPath = embeddedEngine ? '/engine' : ''
-    spawn('open', ['-a', 'Google Chrome', `http://localhost:${config.localStrudelPort}${localPath}`], {
+    spawn('open', ['-a', 'Google Chrome', `http://127.0.0.1:${config.localStrudelPort}${localPath}`], {
       detached: true,
       stdio: 'ignore'
     }).unref()

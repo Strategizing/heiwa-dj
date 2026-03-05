@@ -129,6 +129,22 @@ export default function App() {
   }, [wsConnected])
 
   useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (document.activeElement?.tagName === 'INPUT' || document.activeElement?.tagName === 'TEXTAREA') return
+      
+      if (e.code === 'Space') {
+        e.preventDefault()
+        void onControl(status.playbackActive ? 'stop' : 'start')
+      } else if (e.code === 'Escape') {
+        e.preventDefault()
+        void onControl('hush')
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [status.playbackActive, onControl])
+
+  useEffect(() => {
     const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws'
     const ws = new WebSocket(`${protocol}://${window.location.host}/ws`)
 
@@ -249,7 +265,7 @@ export default function App() {
               🎧 HEIWA DJ
             </h1>
             <div style={{ color: '#94abc7', fontSize: 14, fontWeight: 500, marginTop: 4 }}>
-              Autonomous AI Performer • v1.0
+              Autonomous AI Performer • v1.6.7
             </div>
           </div>
           <div style={{
@@ -273,7 +289,7 @@ export default function App() {
         <div style={{
           display: 'grid',
           gap: 20,
-          gridTemplateColumns: isMobile ? '1fr' : 'minmax(600px, 1.4fr) minmax(400px, 1fr)',
+          gridTemplateColumns: isMobile ? '1fr' : 'minmax(400px, 1fr) minmax(400px, 1fr) minmax(400px, 1fr)',
           height: isMobile ? 'auto' : 'calc(100vh - 160px)'
         }}>
           <div style={{
@@ -310,6 +326,25 @@ export default function App() {
               onTempoRequest={onTempoRequest}
               onOpenStrudel={onOpenStrudel}
               onCopySnippet={onCopySnippet}
+            />
+          </div>
+
+          <div style={{
+            minHeight: 0,
+            display: 'flex',
+            flexDirection: 'column',
+            borderRadius: 20,
+            overflow: 'hidden',
+            border: '1px solid rgba(255, 255, 255, 0.08)',
+            background: 'rgba(9, 14, 23, 0.4)',
+            backdropFilter: 'blur(20px)',
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)'
+          }}>
+            <iframe 
+              src={`http://${window.location.hostname}:4321/engine`} 
+              style={{ width: '100%', height: '100%', border: 'none' }}
+              title="Strudel Engine"
+              allow="autoplay; microphone; midi"
             />
           </div>
         </div>

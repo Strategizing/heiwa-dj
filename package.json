@@ -1,7 +1,7 @@
 {
   "name": "heiwa-dj",
   "private": false,
-  "version": "1.0.0",
+  "version": "1.6.7",
   "description": "Heiwa DJ desktop app with local Strudel runtime and Ollama model control",
   "license": "Apache-2.0",
   "author": "Devon McGregor",
@@ -17,7 +17,7 @@
   "scripts": {
     "setup": "ollama pull qwen2.5-coder:7b",
     "dev": "concurrently \"pnpm --filter server dev\" \"pnpm --filter ui dev\"",
-    "dev:local": "concurrently \"pnpm --filter server dev -- --local\" \"pnpm --filter ui dev\"",
+    "dev:local": "concurrently \"pnpm --filter server dev -- --local --embedded-engine\" \"pnpm --filter ui dev\"",
     "heiwa:start": "bash ./scripts/heiwa-start.sh",
     "heiwa:start:local": "bash ./scripts/heiwa-start.sh --local",
     "heiwa:start:embedded": "bash ./scripts/heiwa-start.sh --local --embedded",

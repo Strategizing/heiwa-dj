@@ -10,8 +10,9 @@ export type BridgePriority = 'P0' | 'P1' | 'P2'
 export interface BridgeCommand {
   id: string
   sessionId: string
-  cmd: 'update' | 'stop'
+  cmd: 'update' | 'stop' | 'gain' | 'cpm'
   code?: string
+  data?: string
   targetPhraseIndex: number
   priority: BridgePriority
   retries: number
@@ -71,7 +72,7 @@ export class DJBridge extends EventEmitter {
     this.setMaxListeners(50)
     this.opts = opts
     this.phraseMs = (60000 / opts.initialCpm) * 4 * opts.phraseLength
-    this.wss = new WebSocketServer({ port: opts.bridgePort })
+    this.wss = new WebSocketServer({ port: opts.bridgePort, host: '127.0.0.1' })
   }
 
   start(): void {
@@ -185,8 +186,9 @@ export class DJBridge extends EventEmitter {
 
   async queueCommand(input: {
     sessionId: string
-    cmd: 'update' | 'stop'
+    cmd: 'update' | 'stop' | 'gain' | 'cpm'
     code?: string
+    data?: string
     priority?: BridgePriority
     targetPhraseIndex?: number
     immediate?: boolean
@@ -211,6 +213,7 @@ export class DJBridge extends EventEmitter {
       sessionId: input.sessionId,
       cmd: input.cmd,
       code: input.code,
+      data: input.data,
       targetPhraseIndex,
       priority,
       retries: 0,
@@ -248,6 +251,11 @@ export class DJBridge extends EventEmitter {
 
     this.currentPhraseIndex += 1
     this.emit('phrase', this.currentPhraseIndex)
+
+    // GC: clear any stale phrases to prevent memory leaks in multi-hour sessions
+    for (const key of this.queue.keys()) {
+      if (key < this.currentPhraseIndex) this.queue.delete(key)
+    }
 
     const cmds = (this.queue.get(this.currentPhraseIndex) ?? [])
       .sort((a, b) => priorityWeight(a.priority) - priorityWeight(b.priority))
@@ -302,7 +310,7 @@ export class DJBridge extends EventEmitter {
 
     const payload = {
       type: cmd.cmd,
-      data: cmd.code,
+      data: cmd.code ?? cmd.data,
       messageId: cmd.id,
       sessionId: cmd.sessionId,
       targetPhraseIndex: cmd.targetPhraseIndex
@@ -385,14 +393,20 @@ export class DJBridge extends EventEmitter {
 
   private startLocalReplServer(): void {
     const app = express()
-    const replDistCandidates = [
-      path.resolve(process.cwd(), 'node_modules', '@strudel', 'repl', 'dist'),
-      path.resolve(process.cwd(), '..', 'node_modules', '@strudel', 'repl', 'dist'),
-      path.resolve(process.cwd(), '..', '..', 'node_modules', '@strudel', 'repl', 'dist'),
-      path.resolve(process.cwd(), 'packages', 'server', 'node_modules', '@strudel', 'repl', 'dist')
-    ]
-    const replDistDir = replDistCandidates.find((candidate) => fs.existsSync(path.resolve(candidate, 'index.js')))
-
+    let replDistDir;
+    try {
+      // First try resolving via module system
+      replDistDir = path.resolve(path.dirname(require.resolve('@strudel/repl/package.json')), 'dist')
+    } catch {
+      const resourcesPath = process.env.HEIWA_DJ_RESOURCES_DIR || ''
+      const candidates = [
+        path.join(resourcesPath, 'runtime', 'server', 'node_modules', '@strudel', 'repl', 'dist'),
+        path.join(process.cwd(), 'node_modules', '@strudel', 'repl', 'dist'),
+        path.join(process.cwd(), 'server', 'node_modules', '@strudel', 'repl', 'dist'),
+        path.join(process.cwd(), '..', 'node_modules', '@strudel', 'repl', 'dist')
+      ]
+      replDistDir = candidates.find((c) => fs.existsSync(path.resolve(c, 'index.js')))
+    }
     if (replDistDir) {
       app.use('/vendor/strudel-repl', express.static(replDistDir))
     }
@@ -547,7 +561,7 @@ $: s(\\"~ cp ~ cp\\")
 $: s(\\"hh*8\\").gain(0.35)"></strudel-editor>
     </div>
     <script>
-      const bridgeUrl = 'ws://localhost:${this.opts.bridgePort}'
+      const bridgeUrl = 'ws://127.0.0.1:${this.opts.bridgePort}'
       const statusEl = document.getElementById('status')
       const unlockBtn = document.getElementById('unlock')
       const connectBtn = document.getElementById('connect')
@@ -557,6 +571,7 @@ $: s(\\"hh*8\\").gain(0.35)"></strudel-editor>
 
       function setStatus(text) {
         statusEl.textContent = text
+        console.log('[Heiwa Engine]', text)
       }
 
       async function getEditor() {
@@ -573,14 +588,28 @@ $: s(\\"hh*8\\").gain(0.35)"></strudel-editor>
                 return
               }
               attempts += 1
-              if (attempts > 240) {
+              if (attempts > 300) {
                 clearInterval(timer)
-                reject(new Error('strudel editor not ready'))
+                reject(new Error('strudel editor not ready after 15s'))
               }
             }, 50)
           })
         })()
         return editorPromise
+      }
+
+      async function initializeStrudel() {
+        try {
+          const editor = await getEditor()
+          // Map samples to the API server
+          const sampleUrl = 'http://127.0.0.1:${this.opts.apiPort}/samples'
+          if (editor.repl && editor.repl.evaluate) {
+            await editor.repl.evaluate('samples("' + sampleUrl + '", "/strudel.json")')
+          }
+          setStatus('initialized')
+        } catch (err) {
+          console.error('[Engine Init Error]', err)
+        }
       }
 
       async function unlockAudio() {
@@ -602,7 +631,7 @@ $: s(\\"hh*8\\").gain(0.35)"></strudel-editor>
           return
         }
 
-        setStatus('connecting')
+        setStatus('connecting bridge...')
         socket = new WebSocket(bridgeUrl)
 
         socket.onopen = () => {
@@ -610,11 +639,13 @@ $: s(\\"hh*8\\").gain(0.35)"></strudel-editor>
           socket.send(JSON.stringify({ type: 'connected' }))
         }
         socket.onclose = () => {
-          setStatus('disconnected')
+          setStatus('disconnected... retrying')
           socket = null
+          setTimeout(() => { void connectBridge() }, 3000)
         }
-        socket.onerror = () => {
-          setStatus('connection error')
+        socket.onerror = (e) => {
+          setStatus('bridge error')
+          console.error(e)
         }
         socket.onmessage = async (event) => {
           let msg
@@ -634,6 +665,27 @@ $: s(\\"hh*8\\").gain(0.35)"></strudel-editor>
               return
             }
 
+            if (msg.type === 'gain') {
+              const value = Number(msg.data)
+              if (editor.repl && editor.repl.scheduler && typeof editor.repl.scheduler.setGain === 'function') {
+                 editor.repl.scheduler.setGain(value)
+              } else if (editor.repl && editor.repl.evaluate) {
+                // fallback if setGain isn't exported directly
+                await editor.repl.evaluate('all((x)=>x.gain(' + value.toFixed(3) + '))')
+              }
+              socket.send(JSON.stringify({ type: 'ack', messageId: msg.messageId, executedPhraseIndex: msg.targetPhraseIndex }))
+              return
+            }
+
+            if (msg.type === 'cpm') {
+              const value = Number(msg.data)
+              if (editor.repl && editor.repl.evaluate) {
+                await editor.repl.evaluate('setcpm(' + value + ')')
+              }
+              socket.send(JSON.stringify({ type: 'ack', messageId: msg.messageId, executedPhraseIndex: msg.targetPhraseIndex }))
+              return
+            }
+
             if (msg.type === 'stop') {
               await editor.stop()
               socket.send(JSON.stringify({ type: 'ack', messageId: msg.messageId, executedPhraseIndex: msg.targetPhraseIndex }))
@@ -642,7 +694,7 @@ $: s(\\"hh*8\\").gain(0.35)"></strudel-editor>
             if (socket && msg?.messageId) {
               socket.send(JSON.stringify({ type: 'error', messageId: msg.messageId, message: String(err) }))
             }
-            console.error(err)
+            console.error('[Bridge Command Error]', err)
           }
         }
       }
@@ -650,7 +702,8 @@ $: s(\\"hh*8\\").gain(0.35)"></strudel-editor>
       unlockBtn.addEventListener('click', () => { void unlockAudio() })
       connectBtn.addEventListener('click', () => { void connectBridge() })
 
-      window.addEventListener('load', () => {
+      window.addEventListener('load', async () => {
+        await initializeStrudel()
         void unlockAudio()
         void connectBridge()
       })
@@ -674,7 +727,7 @@ $: s(\\"hh*8\\").gain(0.35)"></strudel-editor>
       res.type('html').send(helperHtml)
     })
 
-    this.localServer = app.listen(this.opts.localStrudelPort, () => {
+    this.localServer = app.listen(this.opts.localStrudelPort, '127.0.0.1', () => {
       this.emit('local_server', this.opts.localStrudelPort)
     })
   }

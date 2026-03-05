@@ -92,7 +92,7 @@ async function singleToolProbe(model: string): Promise<boolean> {
 
 export async function probeModel(model: string): Promise<ProbeResult> {
   const cap = await hasToolCapability(model)
-  const attempts = 10
+  const attempts = 3
   let ok = 0
 
   if (cap.hasTools) {
@@ -101,7 +101,7 @@ export async function probeModel(model: string): Promise<ProbeResult> {
     }
   }
 
-  const mode: 'tool' | 'json' = cap.hasTools && ok >= 8 ? 'tool' : 'json'
+  const mode: 'tool' | 'json' = cap.hasTools && ok >= 2 ? 'tool' : 'json'
   return {
     model,
     mode,

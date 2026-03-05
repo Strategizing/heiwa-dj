@@ -1,6 +1,6 @@
 {
   "name": "server",
-  "version": "1.0.0",
+  "version": "1.6.7",
   "private": true,
   "type": "module",
   "scripts": {
@@ -9,7 +9,11 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
+    "@strudel/core": "1.2.6",
+    "@strudel/mini": "1.2.6",
     "@strudel/repl": "^1.3.0",
+    "@strudel/transpiler": "1.2.6",
+    "acorn": "^8.16.0",
     "ai": "^6.0.0-beta.56",
     "ai-sdk-ollama": "^3.0.0-beta.18",
     "cors": "^2.8.5",

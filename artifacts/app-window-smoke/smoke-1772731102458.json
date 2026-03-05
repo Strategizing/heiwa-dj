@@ -1,0 +1,79 @@
+{
+  "command": "pnpm app:smoke:windows",
+  "startedAt": "2026-03-05T17:18:15.687Z",
+  "endedAt": "2026-03-05T17:18:22.458Z",
+  "durationMs": 6771,
+  "checks": [
+    {
+      "name": "startup-health",
+      "ok": true,
+      "details": {
+        "statusCode": 200,
+        "activeModel": "qwen2.5-coder:7b",
+        "clientState": "none"
+      },
+      "ts": "2026-03-05T17:18:22.432Z"
+    },
+    {
+      "name": "launch-readiness-ui",
+      "ok": true,
+      "details": {
+        "statusCode": 200,
+        "containsHeiwaDj": true
+      },
+      "ts": "2026-03-05T17:18:22.436Z"
+    },
+    {
+      "name": "snippet-availability",
+      "ok": true,
+      "details": {
+        "statusCode": 200,
+        "containsInitializer": true
+      },
+      "ts": "2026-03-05T17:18:22.438Z"
+    },
+    {
+      "name": "ws-transport",
+      "ok": true,
+      "details": {
+        "type": "status",
+        "clientState": "none"
+      },
+      "ts": "2026-03-05T17:18:22.443Z"
+    },
+    {
+      "name": "chat-request-acceptance",
+      "ok": true,
+      "details": {
+        "statusCode": 200,
+        "bodyOk": true
+      },
+      "ts": "2026-03-05T17:18:22.454Z"
+    },
+    {
+      "name": "transport-control-volume",
+      "ok": true,
+      "details": {
+        "statusCode": 200,
+        "bodyOk": true
+      },
+      "ts": "2026-03-05T17:18:22.457Z"
+    },
+    {
+      "name": "chat-history-recorded",
+      "ok": true,
+      "details": {
+        "statusCode": 200,
+        "hasSmokeText": true
+      },
+      "ts": "2026-03-05T17:18:22.458Z"
+    }
+  ],
+  "processLogs": {
+    "stdoutTail": [
+      "[Heiwa] Node runtime: v25.6.1\n",
+      "┌─────────────────────────────────────────────────────┐\n│  Heiwa DJ — embedded Strudel engine mode           │\n│                                                     │\n│  1. Open http://localhost:4321/engine              │\n│  2. Keep engine window open                         │\n│  3. Open http://localhost:3001 for DJ UI                 │\n└─────────────────────────────────────────────────────┘\n[Heiwa] serving built UI from /Users/dmcgregsauce/ai-dj/packages/ui/dist\n[Heiwa] open http://localhost:3001\n[Heiwa] model selected: qwen2.5-coder:7b (json)\n[Heiwa] installed models: deepseek-coder-v2:16b, qwen2.5-coder:7b\n[Probe] qwen2.5-coder:7b => json (ollama show reports tools capability; tool_call_success=0/10)\n"
+    ],
+    "stderrTail": []
+  }
+}
