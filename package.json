@@ -24,6 +24,7 @@
     "heiwa:start:prod": "bash ./scripts/heiwa-start.sh --prod",
     "heiwa:start:prod:embedded": "bash ./scripts/heiwa-start.sh --prod --local --embedded",
     "heiwa:stop": "bash ./scripts/heiwa-stop.sh",
+    "app:smoke:windows": "node ./scripts/app-window-smoke.mjs",
     "heiwa:app:build": "pnpm desktop:build && bash ./scripts/create-heiwa-app.sh",
     "desktop:dev": "pnpm --filter desktop dev",
     "desktop:build": "pnpm --filter desktop build:mac",

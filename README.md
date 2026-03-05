@@ -85,3 +85,22 @@ Artifacts are created under:
 pnpm typecheck
 pnpm build
 ```
+
+## App-Window Smoke Validation
+
+Automated smoke (window-level and transport checks):
+
+```bash
+pnpm app:smoke:windows
+```
+
+This command starts the built runtime headlessly (no auto-open), then validates:
+- startup health via `/api/status`
+- launch readiness via `/` and `/snippet`
+- websocket status transport via `/ws`
+- chat + transport API acceptance via `/api/request`, `/api/control/volume`, and `/api/history`
+
+Manual fallback (native dialogs/windows not script-controlled):
+- macOS permission prompts
+- Finder-level app install/replace dialogs
+- external native app prompts (for example first-time Ollama desktop prompts)
