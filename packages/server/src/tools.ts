@@ -6,6 +6,7 @@ import { DJBridge } from './bridge.js'
 import type { UIEvent } from './api.js'
 import { dequeueRequest, pushChat, type DJState } from './state.js'
 import { lintStrudelCode } from './linter.js'
+import { DJSpacetimeClient } from './spacetime.js'
 
 interface ToolsContext {
   state: DJState
@@ -100,6 +101,13 @@ async function sendPattern(ctx: ToolsContext, input: {
   if (state.patternHistory.length > 100) state.patternHistory = state.patternHistory.slice(-100)
 
   state.recentVibes = state.patternHistory.slice(-5).map((p) => p.vibe)
+
+  // Sync to SpacetimeDB Hub
+  try {
+    DJSpacetimeClient.getInstance().updatePattern(codeWithVolume, input.vibe)
+  } catch {
+    // ignore hub sync failure
+  }
 
   ctx.bridge.setTempo(cpm, state.phraseLength)
   ctx.breaker.recordSuccess('syntax')

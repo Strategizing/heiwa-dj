@@ -60,6 +60,7 @@ export interface DJState {
   lastError: string | null
   transitioning: boolean
   allowedSamples: string[]
+  currentPersona: string
   patternHistory: PatternRecord[]
   breakerState: Record<'syntax' | 'bridge_timeout' | 'model_timeout', BreakerBucketState>
 }
@@ -174,6 +175,7 @@ export function createInitialState(params: {
     lastError: null,
     transitioning: false,
     allowedSamples: params.allowedSamples,
+    currentPersona: 'The Architect',
     patternHistory: [],
     breakerState: {
       syntax: emptyBucket(),

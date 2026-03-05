@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import * as diff from 'diff'
 
 export interface BreakerBucket {
   state: string
@@ -30,16 +31,20 @@ export interface StatusPayload {
   clientState: 'none' | 'connecting' | 'connected'
   localMode: boolean
   volumeMultiplier: number
+  currentPersona: string
+  personas: { name: string, description: string }[]
   lastError: string | null
 }
 
 interface ControlsProps {
   status: StatusPayload
   nowPlayingCode: string
+  prevPlayingCode: string
   snippetText: string
   onControl: (action: 'start' | 'stop' | 'hush') => Promise<void>
   onVolume: (value: number) => Promise<void>
   onTempoRequest: (cpm: number) => Promise<void>
+  onPersonaChange: (name: string) => Promise<void>
   onOpenStrudel: () => void
   onCopySnippet: () => Promise<void>
 }
@@ -69,10 +74,12 @@ function connectionBannerTone(state: 'none' | 'connecting' | 'connected'): { bg:
 export default function Controls({
   status,
   nowPlayingCode,
+  prevPlayingCode,
   snippetText,
   onControl,
   onVolume,
   onTempoRequest,
+  onPersonaChange,
   onOpenStrudel,
   onCopySnippet
 }: ControlsProps) {
@@ -81,8 +88,40 @@ export default function Controls({
   const [cpmDraft, setCpmDraft] = useState(String(status.cpm))
   const [bannerDismissed, setBannerDismissed] = useState(false)
   const [justConnected, setJustConnected] = useState(false)
+  const [pulse, setPulse] = useState(0)
+  const [viewMode, setViewMode] = useState<'code' | 'diff' | 'debug'>('code')
+  
   const prevClientState = useRef(status.clientState)
   const volumeTimer = useRef<NodeJS.Timeout | null>(null)
+  const pulseTimer = useRef<number | null>(null)
+
+  useEffect(() => {
+    if (!status.playbackActive || !status.clientConnected) {
+      setPulse(0)
+      if (pulseTimer.current) cancelAnimationFrame(pulseTimer.current)
+      return
+    }
+
+    // A beat occurs every (60000 / CPM) ms.
+    // Strudel internal cycles default to 4 beats. We want a smooth sine wave pulse.
+    const beatMs = 60000 / (status.cpm || 120)
+    let startTime = performance.now()
+
+    const animate = (time: number) => {
+      const elapsed = time - startTime
+      // Calculate a value between 0 and 1 based on the beat interval
+      const phase = (elapsed % beatMs) / beatMs
+      // Use sine wave for smooth in/out breathing effect, peaking at the beat
+      const intensity = (Math.sin((phase * Math.PI * 2) - Math.PI / 2) + 1) / 2
+      setPulse(intensity)
+      pulseTimer.current = requestAnimationFrame(animate)
+    }
+
+    pulseTimer.current = requestAnimationFrame(animate)
+    return () => {
+      if (pulseTimer.current) cancelAnimationFrame(pulseTimer.current)
+    }
+  }, [status.playbackActive, status.clientConnected, status.cpm])
 
   useEffect(() => {
     setCpmDraft(String(status.cpm))
@@ -282,6 +321,29 @@ export default function Controls({
           </div>
 
           <div style={{ textAlign: 'right' }}>
+            <div style={{ fontSize: 10, fontWeight: 700, color: '#667c94', letterSpacing: '0.05em', marginBottom: 6 }}>PERSONA</div>
+            <select
+              value={status.currentPersona}
+              onChange={(e) => void onPersonaChange(e.target.value)}
+              style={{
+                background: 'rgba(255,255,255,0.05)',
+                border: '1px solid rgba(255,255,255,0.1)',
+                borderRadius: 8,
+                color: '#fff',
+                fontSize: 12,
+                fontWeight: 600,
+                padding: '4px 8px',
+                outline: 'none',
+                cursor: 'pointer'
+              }}
+            >
+              {status.personas.map(p => (
+                <option key={p.name} value={p.name}>{p.name}</option>
+              ))}
+            </select>
+          </div>
+
+          <div style={{ textAlign: 'right' }}>
             <div style={{ fontSize: 10, fontWeight: 700, color: '#667c94', letterSpacing: '0.05em', marginBottom: 6 }}>VIBE</div>
             <div style={{
               display: 'inline-block',
@@ -293,7 +355,8 @@ export default function Controls({
               fontSize: 13,
               fontWeight: 700,
               textTransform: 'uppercase',
-              boxShadow: `0 0 20px ${vibeBadgeColor}22`
+              boxShadow: status.playbackActive ? `0 0 ${10 + (pulse * 30)}px ${vibeBadgeColor}${Math.floor(20 + pulse * 60).toString(16).padStart(2, '0')}` : `0 0 20px ${vibeBadgeColor}22`,
+              transition: 'box-shadow 50ms ease-out'
             }}>
               {status.vibe}
             </div>
@@ -326,7 +389,29 @@ export default function Controls({
 
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 10, minHeight: 0 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span style={{ fontSize: 10, fontWeight: 700, color: '#667c94', letterSpacing: '0.05em' }}>LIVE PATTERN</span>
+          <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+            <span style={{ fontSize: 10, fontWeight: 700, color: '#667c94', letterSpacing: '0.05em' }}>LIVE PATTERN</span>
+            <div style={{ display: 'flex', background: 'rgba(255,255,255,0.05)', borderRadius: 6, overflow: 'hidden' }}>
+              {(['code', 'diff', 'debug'] as const).map(m => (
+                <button
+                  key={m}
+                  onClick={() => setViewMode(m)}
+                  style={{
+                    border: 0,
+                    background: viewMode === m ? 'rgba(255,255,255,0.1)' : 'transparent',
+                    color: viewMode === m ? '#fff' : '#667c94',
+                    fontSize: 10,
+                    fontWeight: 700,
+                    padding: '4px 8px',
+                    cursor: 'pointer',
+                    textTransform: 'uppercase'
+                  }}
+                >
+                  {m}
+                </button>
+              ))}
+            </div>
+          </div>
           <span style={{ fontSize: 10, fontWeight: 700, color: status.clientConnected ? '#3ddc97' : '#ff5c7a' }}>
             {status.clientState.toUpperCase()}
           </span>
@@ -339,9 +424,11 @@ export default function Controls({
           padding: 16,
           overflow: 'hidden',
           display: 'flex',
-          flexDirection: 'column'
+          flexDirection: 'column',
+          boxShadow: status.playbackActive ? `inset 0 0 ${20 + (pulse * 50)}px rgba(61, 220, 151, ${0.05 + (pulse * 0.1)})` : 'none',
+          transition: 'box-shadow 50ms ease-out'
         }}>
-          <pre style={{
+          <div style={{
             margin: 0,
             flex: 1,
             overflowY: 'auto',
@@ -350,8 +437,41 @@ export default function Controls({
             fontFamily: '"Fira Code", "JetBrains Mono", ui-monospace, monospace',
             color: '#94abc7'
           }}>
-            {nowPlayingCode || '// Awaiting pattern generation...'}
-          </pre>
+            {viewMode === 'code' && (
+              <pre style={{ margin: 0 }}>{nowPlayingCode || '// Awaiting pattern generation...'}</pre>
+            )}
+            
+            {viewMode === 'diff' && (
+              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                {diff.diffLines(prevPlayingCode || '', nowPlayingCode || '').map((part, i) => {
+                  if (part.added) {
+                    return <span key={i} style={{ color: '#3ddc97', background: 'rgba(61, 220, 151, 0.1)', display: 'block' }}>+ {part.value.replace(/\n$/, '')}</span>
+                  }
+                  if (part.removed) {
+                    return <span key={i} style={{ color: '#ff5c7a', background: 'rgba(255, 92, 122, 0.1)', textDecoration: 'line-through', display: 'block' }}>- {part.value.replace(/\n$/, '')}</span>
+                  }
+                  return <span key={i} style={{ opacity: 0.6, display: 'block' }}>  {part.value.replace(/\n$/, '')}</span>
+                })}
+              </div>
+            )}
+
+            {viewMode === 'debug' && (
+              <div style={{ fontSize: 11, display: 'grid', gap: 10 }}>
+                <a href="/api/debug" target="_blank" rel="noreferrer" style={{ color: '#3a86ff', textDecoration: 'none', fontWeight: 'bold' }}>
+                  → Open Full State Dump (/api/debug)
+                </a>
+                <pre style={{ margin: 0, opacity: 0.8, color: '#ff9f1c' }}>
+                  {JSON.stringify({ 
+                    phraseIndex: status.phraseIndex, 
+                    queueLength: status.queueLength, 
+                    bridgeQueue: status.bridgeQueueLength,
+                    phraseMs: status.phraseMs,
+                    breakers: status.breakerState
+                  }, null, 2)}
+                </pre>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 

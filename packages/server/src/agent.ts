@@ -5,6 +5,7 @@ import { CircuitBreaker, FALLBACK_GROOVE } from './breaker.js'
 import { DJBridge } from './bridge.js'
 import type { UIEvent } from './api.js'
 import { createDjTools } from './tools.js'
+import { DJSpacetimeClient } from './spacetime.js'
 import { dequeueRequest, pushChat, trimHistory, updateTempoDerivedFields, type DJState } from './state.js'
 
 interface AgentOptions {
@@ -25,7 +26,11 @@ interface AgentOptions {
   const lastError = state.lastError ?? 'none'
   const ALLOWED_SAMPLE_NAMES = state.allowedSamples.join(', ')
 
-  return `You are Heiwa — master AI DJ. Compose in real-time with Strudel.
+  const st = DJSpacetimeClient.getInstance()
+  const personaPrompt = st.getPersonaPrompt(state.currentPersona) || ''
+
+  return `You are Heiwa — master AI DJ. Persona: ${state.currentPersona}. ${personaPrompt}
+Compose in real-time with Strudel.
 CORE COMMANDS:
 - TEMPO: Use setcpm(N) ONLY.
 - SAMPLES: Use ONLY: ${ALLOWED_SAMPLE_NAMES}.

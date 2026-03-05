@@ -1,0 +1,11 @@
+[package]
+name = "heiwa-dj-hub"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+spacetimedb = "2.0.2"
+serde = { version = "1.0", features = ["derive"] }

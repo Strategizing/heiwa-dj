@@ -41,6 +41,11 @@ const initialStatus: StatusPayload = {
   clientState: 'none',
   localMode: false,
   volumeMultiplier: 0.8,
+  currentPersona: 'The Architect',
+  personas: [
+    { name: 'The Architect', description: 'Precise and minimal.' },
+    { name: 'Liquid Weaver', description: 'Fluid and atmospheric.' }
+  ],
   lastError: null
 }
 
@@ -82,6 +87,7 @@ export default function App() {
     })
   ])
   const [nowPlayingCode, setNowPlayingCode] = useState('')
+  const [prevPlayingCode, setPrevPlayingCode] = useState('')
   const [snippetText, setSnippetText] = useState('')
   const [wsConnected, setWsConnected] = useState(false)
   const [viewportWidth, setViewportWidth] = useState(window.innerWidth)
@@ -163,7 +169,16 @@ export default function App() {
       }
 
       if (event.type === 'pattern') {
-        setNowPlayingCode(event.code)
+        setPrevPlayingCode((prev) => {
+          setNowPlayingCode(event.code)
+          return nowPlayingCode // wait, state updates are async, so we use functional update to capture the old value
+        })
+        // actually, let's just do:
+        setNowPlayingCode((prev) => {
+          if (prev !== event.code) setPrevPlayingCode(prev)
+          return event.code
+        })
+        
         setMessages((prev) => [...prev, makeMessage({ type: 'pattern', ts: event.ts, code: event.code })])
         return
       }
@@ -221,6 +236,11 @@ export default function App() {
   async function onTempoRequest(cpm: number): Promise<void> {
     await postJson('/api/request', { text: `set tempo to ${cpm} CPM`, priority: 'P1', source: 'ui' })
     setMessages((prev) => [...prev, makeMessage({ type: 'system', ts: Date.now(), text: `Tempo request queued: ${cpm} CPM` })])
+  }
+
+  async function onPersonaChange(name: string): Promise<void> {
+    await postJson('/api/control/persona', { name })
+    setMessages((prev) => [...prev, makeMessage({ type: 'system', ts: Date.now(), text: `Persona shifted to: ${name}` })])
   }
 
   function onOpenStrudel(): void {
@@ -320,10 +340,12 @@ export default function App() {
             <Controls
               status={status}
               nowPlayingCode={nowPlayingCode}
+              prevPlayingCode={prevPlayingCode}
               snippetText={snippetText}
               onControl={onControl}
               onVolume={onVolume}
               onTempoRequest={onTempoRequest}
+              onPersonaChange={onPersonaChange}
               onOpenStrudel={onOpenStrudel}
               onCopySnippet={onCopySnippet}
             />

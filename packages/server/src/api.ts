@@ -7,6 +7,7 @@ import { WebSocketServer, type WebSocket } from 'ws'
 import { CircuitBreaker } from './breaker.js'
 import { DJBridge } from './bridge.js'
 import { enqueueRequest, makeRequest, pushChat, updateTempoDerivedFields, type DJState, type Priority } from './state.js'
+import { DJSpacetimeClient } from './spacetime.js'
 import { processLocalIntelligence } from './intelligence.js'
 
 export type UIEvent =
@@ -58,6 +59,11 @@ function buildStatus(state: DJState, bridge: DJBridge, breaker: CircuitBreaker) 
     mode: state.mode,
     vibe: state.currentVibe,
     cpm: state.currentCPM,
+    currentPersona: state.currentPersona,
+    personas: [
+      { name: 'The Architect', description: 'Precise and minimal.' },
+      { name: 'Liquid Weaver', description: 'Fluid and atmospheric.' }
+    ],
     currentKey: state.currentKey,
     phraseIndex: state.currentPhraseIndex,
     phraseMs: state.phraseMs,
@@ -131,6 +137,26 @@ export function startAPI(opts: APIOptions): APIRuntime {
   if (builtUiDir) {
     app.use(express.static(builtUiDir))
   }
+
+  app.get('/api/debug', (_req, res) => {
+    res.json({
+      timestamp: Date.now(),
+      status: buildStatus(opts.state, opts.bridge, opts.breaker),
+      stateDump: {
+        sessionId: opts.state.sessionId,
+        chatLog: opts.state.chatLog,
+        patternHistory: opts.state.patternHistory,
+        requestQueue: opts.state.requestQueue,
+        allowedSamples: opts.state.allowedSamples,
+        lastError: opts.state.lastError
+      },
+      bridge: {
+        connections: opts.bridge.getConnectionCount(),
+        queueLength: opts.bridge.getQueueLength(),
+        clientState: opts.bridge.getClientConnectionState()
+      }
+    })
+  })
 
   app.get('/api/status', (_req, res) => {
     res.json(buildStatus(opts.state, opts.bridge, opts.breaker))
@@ -281,6 +307,24 @@ export function startAPI(opts: APIOptions): APIRuntime {
 
     sendStatus()
     res.json({ ok: true, value })
+  })
+
+  app.post('/api/control/persona', async (req, res) => {
+    const name = req.body?.name as string
+    if (!name) {
+      res.status(400).json({ ok: false, error: 'name is required' })
+      return
+    }
+
+    opts.state.currentPersona = name
+    try {
+      DJSpacetimeClient.getInstance().setPersona(name)
+    } catch {
+      // ignore
+    }
+
+    sendStatus()
+    res.json({ ok: true, name })
   })
 
   app.get('/', (_req, res) => {

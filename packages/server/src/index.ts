@@ -6,6 +6,7 @@ import readline from 'node:readline'
 import fs from 'node:fs'
 import { startAPI } from './api.js'
 import { DJAgentRunner } from './agent.js'
+import { DJSpacetimeClient } from './spacetime.js'
 import { DJBridge } from './bridge.js'
 import { CircuitBreaker } from './breaker.js'
 import { loadConfig } from './config/dj.config.js'
@@ -156,6 +157,24 @@ async function main(): Promise<void> {
     uiEmitter,
     onStateChange: api.broadcast
   })
+
+  // Initialize SpacetimeDB Hub connection
+  try {
+    const st = DJSpacetimeClient.getInstance()
+    await st.connect()
+    console.log('[Heiwa] SpacetimeDB Hub connected.')
+    
+    // Sync local state when SpacetimeDB set updates (for live persona/vibe shifts)
+    st.onDjSetUpdate((newSet) => {
+      if (newSet.current_persona !== state.currentPersona) {
+        console.log(`[Heiwa] Persona shift in Hub: ${newSet.current_persona}`)
+        state.currentPersona = newSet.current_persona
+        api.broadcast()
+      }
+    })
+  } catch (err) {
+    console.warn('[Heiwa] SpacetimeDB Hub not available, running in local-only mode.')
+  }
 
   agent.start()
 
