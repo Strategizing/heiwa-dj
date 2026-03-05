@@ -63,6 +63,29 @@ pub fn init_set(ctx: &ReducerContext) -> Result<(), String> {
     Ok(())
 }
 
+#[table(accessor = log_entry, public)]
+pub struct LogEntry {
+    #[primary_key]
+    #[auto_inc]
+    pub id: u64,
+    pub timestamp: Timestamp,
+    pub level: String, // CRITICAL, WARN, INFO, HEIWA
+    pub source: String, // main, server, engine
+    pub message: String,
+}
+
+#[reducer]
+pub fn submit_log(ctx: &ReducerContext, level: String, source: String, message: String) -> Result<(), String> {
+    ctx.db.log_entry().insert(LogEntry {
+        id: 0,
+        timestamp: ctx.timestamp,
+        level,
+        source,
+        message,
+    });
+    Ok(())
+}
+
 #[reducer]
 pub fn update_pattern(ctx: &ReducerContext, code: String, vibe: String) -> Result<(), String> {
     let mut set = ctx.db.dj_set().id().find(1).ok_or("Set not initialized")?;

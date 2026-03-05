@@ -1,7 +1,7 @@
 {
   "name": "heiwa-dj",
   "private": false,
-  "version": "1.6.7",
+  "version": "1.7.0",
   "description": "Heiwa DJ desktop app with local Strudel runtime and Ollama model control",
   "license": "Apache-2.0",
   "author": "Devon McGregor",

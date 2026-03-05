@@ -5,6 +5,7 @@ import { EventEmitter } from 'node:events'
 import readline from 'node:readline'
 import fs from 'node:fs'
 import { startAPI } from './api.js'
+import { logger } from './logger.js'
 import { DJAgentRunner } from './agent.js'
 import { DJSpacetimeClient } from './spacetime.js'
 import { DJBridge } from './bridge.js'
@@ -98,6 +99,9 @@ async function main(): Promise<void> {
   }
 
   const rootDir = discoverRootDir()
+  const logsDir = process.env.HEIWA_DJ_LOGS_DIR || path.join(rootDir, 'logs')
+  logger.init(logsDir)
+  
   const sampleMapPath = path.resolve(rootDir, config.sampleMapPath)
   const sampleDir = path.resolve(rootDir, config.sampleDir)
   const uiDistDir = process.env.HEIWA_DJ_UI_DIST_DIR
@@ -206,14 +210,6 @@ async function main(): Promise<void> {
   }
   for (const probe of modelSelection.probes) {
     console.log(`[Probe] ${probe.model} => ${probe.mode} (${probe.details})`)
-  }
-
-  if (localMode && !noAutoOpen) {
-    const localPath = embeddedEngine ? '/engine' : ''
-    spawn('open', ['-a', 'Google Chrome', `http://127.0.0.1:${config.localStrudelPort}${localPath}`], {
-      detached: true,
-      stdio: 'ignore'
-    }).unref()
   }
 
   const shutdown = async () => {

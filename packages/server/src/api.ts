@@ -169,6 +169,20 @@ export function startAPI(opts: APIOptions): APIRuntime {
     })
   })
 
+  app.get('/api/share', (_req, res) => {
+    const shareData = {
+      version: '1.0',
+      timestamp: Date.now(),
+      vibe: opts.state.currentVibe,
+      persona: opts.state.currentPersona,
+      cpm: opts.state.currentCPM,
+      key: opts.state.currentKey,
+      topPatterns: opts.state.patternHistory.slice(-5).map(h => ({ code: h.code, vibe: h.vibe })),
+      summary: `A ${opts.state.currentVibe} set at ${opts.state.currentCPM} BPM, guided by ${opts.state.currentPersona}.`
+    }
+    res.json(shareData)
+  })
+
   app.get('/snippet', (_req, res) => {
     res.type('text/plain').send(snippet(opts.bridge.getBridgePort()))
   })
