@@ -5,7 +5,7 @@ Thanks for contributing to `heiwa-dj`.
 ## Development Setup
 
 ```bash
-git clone https://github.com/<YOUR_ORG_OR_USER>/heiwa-dj.git
+git clone https://github.com/Strategizing/heiwa-dj.git
 cd heiwa-dj
 pnpm install
 pnpm setup

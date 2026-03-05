@@ -1,30 +1,30 @@
 # Heiwa DJ File-Level Plan (Executed)
 
 ## Root
-- [x] /Users/dmcgregsauce/ai-dj/.nvmrc
-- [x] /Users/dmcgregsauce/ai-dj/package.json
-- [x] /Users/dmcgregsauce/ai-dj/pnpm-workspace.yaml
-- [x] /Users/dmcgregsauce/ai-dj/config/dj.config.ts
-- [x] /Users/dmcgregsauce/ai-dj/samples/strudel.json
+- [x] .nvmrc
+- [x] package.json
+- [x] pnpm-workspace.yaml
+- [x] config/dj.config.ts
+- [x] samples/strudel.json
 
 ## Server
-- [x] /Users/dmcgregsauce/ai-dj/packages/server/package.json
-- [x] /Users/dmcgregsauce/ai-dj/packages/server/src/state.ts
-- [x] /Users/dmcgregsauce/ai-dj/packages/server/src/probe.ts
-- [x] /Users/dmcgregsauce/ai-dj/packages/server/src/linter.ts
-- [x] /Users/dmcgregsauce/ai-dj/packages/server/src/bridge.ts
-- [x] /Users/dmcgregsauce/ai-dj/packages/server/src/breaker.ts
-- [x] /Users/dmcgregsauce/ai-dj/packages/server/src/tools.ts
-- [x] /Users/dmcgregsauce/ai-dj/packages/server/src/agent.ts
-- [x] /Users/dmcgregsauce/ai-dj/packages/server/src/api.ts
-- [x] /Users/dmcgregsauce/ai-dj/packages/server/src/index.ts
+- [x] packages/server/package.json
+- [x] packages/server/src/state.ts
+- [x] packages/server/src/probe.ts
+- [x] packages/server/src/linter.ts
+- [x] packages/server/src/bridge.ts
+- [x] packages/server/src/breaker.ts
+- [x] packages/server/src/tools.ts
+- [x] packages/server/src/agent.ts
+- [x] packages/server/src/api.ts
+- [x] packages/server/src/index.ts
 
 ## UI
-- [x] /Users/dmcgregsauce/ai-dj/packages/ui/package.json
-- [x] /Users/dmcgregsauce/ai-dj/packages/ui/src/main.tsx
-- [x] /Users/dmcgregsauce/ai-dj/packages/ui/src/App.tsx
-- [x] /Users/dmcgregsauce/ai-dj/packages/ui/src/Chat.tsx
-- [x] /Users/dmcgregsauce/ai-dj/packages/ui/src/Controls.tsx
+- [x] packages/ui/package.json
+- [x] packages/ui/src/main.tsx
+- [x] packages/ui/src/App.tsx
+- [x] packages/ui/src/Chat.tsx
+- [x] packages/ui/src/Controls.tsx
 
 ## Validation
 - [x] `pnpm install`

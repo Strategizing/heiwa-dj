@@ -7,12 +7,12 @@
   "author": "Devon McGregor",
   "repository": {
     "type": "git",
-    "url": "https://github.com/<YOUR_ORG_OR_USER>/heiwa-dj.git"
+    "url": "https://github.com/Strategizing/heiwa-dj.git"
   },
   "bugs": {
-    "url": "https://github.com/<YOUR_ORG_OR_USER>/heiwa-dj/issues"
+    "url": "https://github.com/Strategizing/heiwa-dj/issues"
   },
-  "homepage": "https://github.com/<YOUR_ORG_OR_USER>/heiwa-dj#readme",
+  "homepage": "https://github.com/Strategizing/heiwa-dj#readme",
   "packageManager": "pnpm@10.28.2",
   "scripts": {
     "setup": "ollama pull qwen2.5-coder:7b",
