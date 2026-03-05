@@ -1,0 +1,7 @@
+{
+  "_base": "/samples/",
+  "bd": ["bd.wav"],
+  "sd": ["sd.wav"],
+  "hh": ["hh.wav"],
+  "cp": ["cp.wav"]
+}
