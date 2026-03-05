@@ -1,0 +1,20 @@
+# dependencies
+node_modules/
+packages/*/node_modules/
+packages/desktop/runtime/server/node_modules/
+
+# build outputs
+packages/*/dist/
+packages/desktop/release/
+
+# logs
+*.log
+
+# macOS
+.DS_Store
+
+# editor and env
+.vscode/
+.env
+.env.*
+!.env.example

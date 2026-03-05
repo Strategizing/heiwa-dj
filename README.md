@@ -77,7 +77,7 @@ Artifacts are created under:
 - `packages/desktop/release`
 
 `pnpm heiwa:app:build` copies the packaged `.app` into:
-- `~/Applications/Heiwa DJ.app` (local machine target)
+- `$HOME/Applications/Heiwa DJ.app` (local machine target)
 
 ## Development Validation
 
