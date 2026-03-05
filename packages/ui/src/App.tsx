@@ -221,40 +221,86 @@ export default function App() {
   return (
     <main style={{
       minHeight: '100vh',
-      background: 'radial-gradient(1400px 760px at 8% -10%, #1f4b6b 0%, #0a0f16 42%, #070b11 100%)',
+      background: 'radial-gradient(circle at 0% 0%, #16253d 0%, #05080c 50%), linear-gradient(135deg, #05080c 0%, #0c1118 100%)',
       color: '#e7edf5',
-      padding: 16,
-      boxSizing: 'border-box'
+      padding: isMobile ? 12 : 24,
+      boxSizing: 'border-box',
+      fontFamily: '"Inter", "SF Pro Display", sans-serif'
     }}>
-      <div style={{ maxWidth: 1320, margin: '0 auto', display: 'grid', gap: 14 }}>
-        <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
+      <div style={{ maxWidth: 1440, margin: '0 auto', display: 'grid', gap: 20 }}>
+        <header style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          flexWrap: 'wrap',
+          gap: 12,
+          padding: '0 8px'
+        }}>
           <div>
-            <h1 style={{ margin: 0, fontSize: 30 }}>🎧 HEIWA DJ</h1>
-            <div style={{ color: '#8da2b8', fontSize: 13 }}>Realtime Strudel AI performer</div>
+            <h1 style={{
+              margin: 0,
+              fontSize: 32,
+              fontWeight: 800,
+              letterSpacing: '-0.02em',
+              background: 'linear-gradient(to right, #fff, #94abc7)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent'
+            }}>
+              🎧 HEIWA DJ
+            </h1>
+            <div style={{ color: '#94abc7', fontSize: 14, fontWeight: 500, marginTop: 4 }}>
+              Autonomous AI Performer • v1.0
+            </div>
           </div>
           <div style={{
-            borderRadius: 999,
-            border: '1px solid #2f4258',
-            padding: '6px 10px',
-            fontSize: 12,
+            borderRadius: 12,
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            padding: '8px 16px',
+            fontSize: 13,
+            fontWeight: 600,
             color: '#d6dee8',
-            background: '#0f1621'
+            background: 'rgba(15, 22, 33, 0.6)',
+            backdropFilter: 'blur(10px)',
+            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.2)'
           }}>
-            {wsConnected ? 'UI WS connected' : 'UI WS disconnected'} · {connectionMode}
+            <span style={{ color: wsConnected ? '#3ddc97' : '#ff5c7a', marginRight: 8 }}>●</span>
+            {wsConnected ? 'UI WS Connected' : 'UI WS Disconnected'}
+            <span style={{ margin: '0 12px', opacity: 0.3 }}>|</span>
+            <span style={{ color: '#5cc6ff' }}>{connectionMode}</span>
           </div>
         </header>
 
         <div style={{
           display: 'grid',
-          gap: 14,
-          gridTemplateColumns: isMobile ? '1fr' : '1.3fr 1fr',
-          minHeight: isMobile ? 'auto' : 'calc(100vh - 146px)'
+          gap: 20,
+          gridTemplateColumns: isMobile ? '1fr' : 'minmax(600px, 1.4fr) minmax(400px, 1fr)',
+          height: isMobile ? 'auto' : 'calc(100vh - 160px)'
         }}>
-          <div style={{ minHeight: 0 }}>
+          <div style={{
+            minHeight: 0,
+            display: 'flex',
+            flexDirection: 'column',
+            borderRadius: 20,
+            overflow: 'hidden',
+            border: '1px solid rgba(255, 255, 255, 0.08)',
+            background: 'rgba(9, 14, 23, 0.4)',
+            backdropFilter: 'blur(20px)',
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)'
+          }}>
             <Chat messages={messages} onSend={onSend} />
           </div>
 
-          <div style={{ minHeight: 0 }}>
+          <div style={{
+            minHeight: 0,
+            display: 'flex',
+            flexDirection: 'column',
+            borderRadius: 20,
+            overflow: 'hidden',
+            border: '1px solid rgba(255, 255, 255, 0.08)',
+            background: 'rgba(9, 14, 23, 0.4)',
+            backdropFilter: 'blur(20px)',
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)'
+          }}>
             <Controls
               status={status}
               nowPlayingCode={nowPlayingCode}

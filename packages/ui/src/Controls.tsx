@@ -127,199 +127,267 @@ export default function Controls({
 
   return (
     <section style={{
-      border: '1px solid #273445',
-      borderRadius: 14,
-      padding: 14,
-      background: 'linear-gradient(160deg, #101824 0%, #0b1118 100%)',
-      display: 'grid',
-      gap: 14
+      display: 'flex',
+      flexDirection: 'column',
+      gap: 24,
+      padding: 24,
+      height: '100%',
+      boxSizing: 'border-box',
+      overflowY: 'auto',
+      background: 'rgba(5, 8, 12, 0.2)'
     }}>
       {((!status.clientConnected && !bannerDismissed) || justConnected) ? (
         <div style={{
-          border: `1px solid ${bannerTone.border}`,
-          background: bannerTone.bg,
-          borderRadius: 10,
-          padding: 10,
+          border: `1px solid ${bannerTone.border}55`,
+          background: `${bannerTone.bg}88`,
+          borderRadius: 12,
+          padding: 16,
           display: 'grid',
-          gap: 8
+          gap: 12,
+          backdropFilter: 'blur(8px)'
         }}>
-          <div style={{ fontWeight: 700 }}>{bannerTone.label}</div>
+          <div style={{ fontWeight: 800, fontSize: 13, letterSpacing: '0.02em', color: '#fff' }}>
+            {bannerTone.label.toUpperCase()}
+          </div>
           {status.clientState === 'connected' ? (
-            <div style={{ fontSize: 12, color: '#9fe8cf' }}>Connection established.</div>
+            <div style={{ fontSize: 13, color: '#9fe8cf', fontWeight: 500 }}>Connection established. Audio runtime is ready.</div>
           ) : (
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
               <button
                 onClick={onOpenStrudel}
-                style={{ border: 0, borderRadius: 8, padding: '8px 10px', cursor: 'pointer', background: '#3a86ff', color: '#fff' }}
+                style={{ border: 0, borderRadius: 8, padding: '10px 16px', cursor: 'pointer', background: '#3a86ff', color: '#fff', fontWeight: 600, fontSize: 13 }}
               >
-                Open strudel.cc
+                OPEN ENGINE
               </button>
               <button
                 onClick={() => void onCopySnippet()}
-                style={{ border: 0, borderRadius: 8, padding: '8px 10px', cursor: 'pointer', background: '#2a9d8f', color: '#06241f', fontWeight: 700 }}
+                style={{ border: 0, borderRadius: 8, padding: '10px 16px', cursor: 'pointer', background: 'rgba(255,255,255,0.1)', color: '#fff', fontWeight: 600, fontSize: 13 }}
               >
-                Copy snippet
+                COPY SNIPPET
               </button>
               <button
                 onClick={() => setBannerDismissed(true)}
-                style={{ border: '1px solid #31465f', borderRadius: 8, padding: '8px 10px', cursor: 'pointer', background: 'transparent', color: '#d6dee8' }}
+                style={{ border: 0, borderRadius: 8, padding: '10px 16px', cursor: 'pointer', background: 'transparent', color: 'rgba(255,255,255,0.4)', fontWeight: 600, fontSize: 12 }}
               >
-                Dismiss
+                DISMISS
               </button>
             </div>
           )}
-          {snippetText ? <div style={{ fontSize: 11, color: '#9eb3c8' }}>Snippet ready from /snippet</div> : null}
         </div>
       ) : null}
 
-      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
         <button
           onClick={() => void onControl('start')}
           disabled={!status.clientConnected}
           style={{
-            padding: '10px 12px',
+            height: 48,
             border: 0,
-            borderRadius: 8,
-            background: status.clientConnected ? '#2a9d8f' : '#436a66',
-            color: '#06241f',
-            fontWeight: 700,
-            cursor: status.clientConnected ? 'pointer' : 'not-allowed'
+            borderRadius: 12,
+            background: status.clientConnected ? '#3ddc97' : 'rgba(61, 220, 151, 0.1)',
+            color: status.clientConnected ? '#050a08' : 'rgba(61, 220, 151, 0.3)',
+            fontWeight: 800,
+            fontSize: 13,
+            cursor: status.clientConnected ? 'pointer' : 'not-allowed',
+            transition: 'all 200ms ease'
           }}
         >
-          ▶ Start Set
+          START
         </button>
         <button
           onClick={() => void onControl('stop')}
-          style={{ padding: '10px 12px', border: 0, borderRadius: 8, background: '#53687e', color: '#e7edf5', cursor: 'pointer' }}
+          style={{
+            height: 48,
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            borderRadius: 12,
+            background: 'rgba(255, 255, 255, 0.05)',
+            color: '#fff',
+            fontWeight: 700,
+            fontSize: 13,
+            cursor: 'pointer'
+          }}
         >
-          ■ Stop
+          STOP
         </button>
         <button
           onClick={() => void onControl('hush')}
-          style={{ padding: '10px 12px', border: 0, borderRadius: 8, background: '#d62828', color: '#fff', fontWeight: 700, cursor: 'pointer' }}
+          style={{
+            height: 48,
+            border: 0,
+            borderRadius: 12,
+            background: '#ff5c7a',
+            color: '#0a0506',
+            fontWeight: 800,
+            fontSize: 13,
+            cursor: 'pointer'
+          }}
         >
-          ✕ Hush
+          HUSH
         </button>
       </div>
 
-      <div style={{ display: 'grid', gap: 10 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-          <span style={{ fontSize: 12, color: '#8da2b8' }}>CPM</span>
-          {!editingCpm ? (
-            <button
-              onClick={() => setEditingCpm(true)}
-              style={{
-                border: '1px solid #2f4258',
-                borderRadius: 8,
-                background: '#0b1118',
-                color: '#e7edf5',
-                fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
-                fontSize: 28,
-                lineHeight: 1,
-                padding: '6px 10px',
-                cursor: 'pointer'
-              }}
-            >
-              {status.cpm}
-            </button>
-          ) : (
-            <div style={{ display: 'flex', gap: 8 }}>
-              <input
-                value={cpmDraft}
-                onChange={(e) => setCpmDraft(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') void submitTempo()
-                  if (e.key === 'Escape') {
-                    setCpmDraft(String(status.cpm))
-                    setEditingCpm(false)
-                  }
-                }}
-                autoFocus
+      <div style={{
+        background: 'rgba(0, 0, 0, 0.2)',
+        borderRadius: 16,
+        padding: 20,
+        border: '1px solid rgba(255, 255, 255, 0.05)',
+        display: 'grid',
+        gap: 16
+      }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+            <span style={{ fontSize: 10, fontWeight: 700, color: '#667c94', letterSpacing: '0.05em' }}>TEMPO / CPM</span>
+            {!editingCpm ? (
+              <div
+                onClick={() => setEditingCpm(true)}
                 style={{
-                  width: 90,
-                  borderRadius: 8,
-                  border: '1px solid #2f4258',
-                  background: '#0b1118',
-                  color: '#e7edf5',
-                  fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
-                  fontSize: 24,
-                  padding: '4px 8px'
+                  fontSize: 36,
+                  fontWeight: 800,
+                  fontFamily: 'ui-monospace, monospace',
+                  color: '#fff',
+                  cursor: 'pointer',
+                  letterSpacing: '-0.02em'
                 }}
-              />
-              <button onClick={() => void submitTempo()} style={{ borderRadius: 8, border: 0, padding: '0 10px', background: '#2a9d8f', color: '#06241f', fontWeight: 700 }}>Set</button>
-            </div>
-          )}
+              >
+                {status.cpm}
+              </div>
+            ) : (
+              <div style={{ display: 'flex', gap: 8 }}>
+                <input
+                  value={cpmDraft}
+                  onChange={(e) => setCpmDraft(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') void submitTempo()
+                    if (e.key === 'Escape') {
+                      setCpmDraft(String(status.cpm))
+                      setEditingCpm(false)
+                    }
+                  }}
+                  autoFocus
+                  style={{
+                    width: 70,
+                    borderRadius: 8,
+                    border: '1px solid #3a86ff',
+                    background: '#05080c',
+                    color: '#fff',
+                    fontFamily: 'ui-monospace, monospace',
+                    fontSize: 24,
+                    padding: '4px 8px',
+                    outline: 'none'
+                  }}
+                />
+              </div>
+            )}
+          </div>
 
-          <span style={{
-            borderRadius: 999,
-            padding: '6px 12px',
-            border: '1px solid #2f4258',
-            background: '#0f1621',
-            color: vibeBadgeColor,
-            boxShadow: `0 0 18px ${vibeBadgeColor}44`,
-            transition: 'all 280ms ease'
-          }}>
-            {status.vibe}
+          <div style={{ textAlign: 'right' }}>
+            <div style={{ fontSize: 10, fontWeight: 700, color: '#667c94', letterSpacing: '0.05em', marginBottom: 6 }}>VIBE</div>
+            <div style={{
+              display: 'inline-block',
+              borderRadius: 8,
+              padding: '6px 12px',
+              border: `1px solid ${vibeBadgeColor}44`,
+              background: `${vibeBadgeColor}11`,
+              color: vibeBadgeColor,
+              fontSize: 13,
+              fontWeight: 700,
+              textTransform: 'uppercase',
+              boxShadow: `0 0 20px ${vibeBadgeColor}22`
+            }}>
+              {status.vibe}
+            </div>
+          </div>
+        </div>
+
+        <div style={{ display: 'grid', gap: 8 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, fontWeight: 600, color: '#667c94' }}>
+            <span>OUTPUT VOLUME</span>
+            <span>{volume}%</span>
+          </div>
+          <input
+            type="range"
+            min={0}
+            max={100}
+            step={1}
+            value={volume}
+            onChange={(e) => {
+              const next = Number(e.currentTarget.value)
+              setVolume(next)
+              void onVolume(next / 100)
+            }}
+            style={{ width: '100%', accentColor: '#3a86ff' }}
+          />
+        </div>
+      </div>
+
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 10, minHeight: 0 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span style={{ fontSize: 10, fontWeight: 700, color: '#667c94', letterSpacing: '0.05em' }}>LIVE PATTERN</span>
+          <span style={{ fontSize: 10, fontWeight: 700, color: status.clientConnected ? '#3ddc97' : '#ff5c7a' }}>
+            {status.clientState.toUpperCase()}
           </span>
         </div>
-
-        <div style={{ fontSize: 12, color: '#8da2b8' }}>
-          Model: {status.activeModel} [{status.modelMode}] · Connection: {status.clientState}
+        <div style={{
+          flex: 1,
+          background: 'rgba(0, 0, 0, 0.3)',
+          borderRadius: 16,
+          border: '1px solid rgba(255, 255, 255, 0.05)',
+          padding: 16,
+          overflow: 'hidden',
+          display: 'flex',
+          flexDirection: 'column'
+        }}>
+          <pre style={{
+            margin: 0,
+            flex: 1,
+            overflowY: 'auto',
+            fontSize: 13,
+            lineHeight: 1.6,
+            fontFamily: '"Fira Code", "JetBrains Mono", ui-monospace, monospace',
+            color: '#94abc7'
+          }}>
+            {nowPlayingCode || '// Awaiting pattern generation...'}
+          </pre>
         </div>
       </div>
 
-      <label style={{ display: 'grid', gap: 8 }}>
-        <span style={{ fontSize: 13, color: '#8da2b8' }}>Volume: {volume}</span>
-        <input
-          type="range"
-          min={0}
-          max={100}
-          step={1}
-          value={volume}
-          onChange={(e) => {
-            const next = Number(e.currentTarget.value)
-            setVolume(next)
-            void onVolume(next / 100)
-          }}
-        />
-      </label>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: 8 }}>
+        <div style={{ display: 'flex', gap: 12 }}>
+          {([
+            ['SYN', status.breakerState.syntax.state],
+            ['BRG', status.breakerState.bridge_timeout.state],
+            ['MDL', status.breakerState.model_timeout.state]
+          ] as const).map(([label, state]) => (
+            <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <span style={{
+                width: 7,
+                height: 7,
+                borderRadius: '50%',
+                background: breakerColor(state),
+                boxShadow: state === 'open' ? '0 0 8px #d62828' : 'none'
+              }} />
+              <span style={{ fontSize: 10, fontWeight: 700, color: '#4a5d71' }}>{label}</span>
+            </div>
+          ))}
+        </div>
+        <div style={{ fontSize: 11, fontWeight: 500, color: '#4a5d71' }}>
+          {status.activeModel}
+        </div>
+      </div>
 
-      <div style={{ border: '1px solid #273445', borderRadius: 10, padding: 10, background: '#0b1118' }}>
-        <div style={{ fontSize: 12, color: '#8da2b8', marginBottom: 6 }}>NOW PLAYING</div>
-        <pre style={{
-          margin: 0,
-          maxHeight: '17.5em',
-          overflowY: 'auto',
-          lineHeight: 1.45,
-          fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
-          background: '#121a24',
+      {status.lastError && (
+        <div style={{
+          padding: 10,
+          background: 'rgba(255, 92, 122, 0.1)',
+          border: '1px solid rgba(255, 92, 122, 0.2)',
           borderRadius: 8,
-          padding: 8
+          color: '#ff99aa',
+          fontSize: 12,
+          fontWeight: 500
         }}>
-          {nowPlayingCode || '// waiting for first pattern'}
-        </pre>
-      </div>
-
-      <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
-        {([
-          ['SYN', status.breakerState.syntax.state],
-          ['BRG', status.breakerState.bridge_timeout.state],
-          ['MDL', status.breakerState.model_timeout.state]
-        ] as const).map(([label, state]) => (
-          <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <span style={{
-              width: 10,
-              height: 10,
-              borderRadius: '50%',
-              background: breakerColor(state),
-              display: 'inline-block'
-            }} />
-            <span style={{ fontSize: 12, color: '#8da2b8' }}>{label}</span>
-          </div>
-        ))}
-      </div>
-
-      {status.lastError ? <div style={{ color: '#ff7b7b', fontSize: 13 }}>{status.lastError}</div> : null}
+          {status.lastError}
+        </div>
+      )}
     </section>
   )
 }
